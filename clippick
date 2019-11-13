@@ -1,0 +1,49 @@
+#!/usr/bin/env python
+"""
+TODO: Hash the content of the clipbboard, use that hash in default name, and
+      check to ensure that that content isn't already dumped to file.
+"""
+import os
+import sys
+import argparse
+import gtk
+import subprocess
+from datetime import datetime
+
+
+def parse_arguments(image):
+    name = "clipboard-%s-%sx%s.png" % (
+        datetime.now().strftime("%H%M%S-%Y%m%d"),
+        image.props.width,
+        image.props.height
+    )
+    parser = argparse.ArgumentParser(
+        description="Write image from clipboard to file"
+    )
+    parser.add_argument(
+        '--name', '-n', type=str, default=name,
+        help="Name of the image file"
+    )
+    parser.add_argument(
+        "--open", "-o", action='store_true',
+        help="Automatically open the saved image"
+    )
+    return parser.parse_args()
+
+
+def main():
+    clipboard = gtk.clipboard_get()
+    image = clipboard.wait_for_image()
+    if image is not None:
+        args = parse_arguments(image)
+        image.save(args.name, "png")
+        
+        if args.open:
+            fpath = os.path.abspath(args.name)
+            subprocess.call(["/usr/bin/gio", "open", "%s" % fpath])
+    else:
+        print("no image on clipboard")
+
+
+if __name__ == '__main__':
+    main()
