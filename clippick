@@ -8,12 +8,16 @@ import sys
 import argparse
 import gtk
 import subprocess
+from hashlib import sha256
 from datetime import datetime
 
+def image_hash(image):
+    return sha256(image.get_pixels()).hexdigest()
 
 def parse_arguments(image):
+    ihash = image_hash(image)[0:8]
     name = "clipboard-%s-%sx%s.png" % (
-        datetime.now().strftime("%H%M%S-%Y%m%d"),
+        ihash,
         image.props.width,
         image.props.height
     )
@@ -37,6 +41,8 @@ def main():
     if image is not None:
         args = parse_arguments(image)
         image.save(args.name, "png")
+        print("image saved to %s" % args.name)
+
         
         if args.open:
             fpath = os.path.abspath(args.name)
